@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LaunchMode</class>
+ <widget class="QDialog" name="LaunchMode">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>500</width>
+    <height>180</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>LaunchMode</string>
+  </property>
+  <widget class="QPushButton" name="console">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>50</y>
+     <width>200</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Launch With Console
+SFW</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ui">
+   <property name="geometry">
+    <rect>
+     <x>270</x>
+     <y>50</y>
+     <width>200</width>
+     <height>80</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Launch With UI
+NSFW</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
