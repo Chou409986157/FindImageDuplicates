@@ -1,5 +1,5 @@
 from PyQt5 import uic
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QFileDialog, QLabel
 import os, shutil, json
 from typing import Union, Tuple
 import hashlib, imagehash
@@ -15,10 +15,26 @@ class LaunchMode(QDialog):
 
     def InConsole(self) -> None:
         self.close()
-        img_folder = os.path.abspath("./")
-        os.system(f'start cmd.exe /c "echo operating in {img_folder} & pause"')
-        handler = IdentityComputation(img_folder)
-        handler.Duplicates()
+        img_dir = "./"
+        os.system(
+            f'start cmd.exe /c "echo operating in {os.path.abspath(img_dir)} & pause"'
+        )
+        handler = IdentityComputation(img_dir)
+        result = handler.Duplicates()
+        if type(result) == tuple:
+            same_images, similar_images = result
+            print("Same images: ")
+            for i in range(len(same_images)):
+                print(
+                    f"{os.path.basename(same_images[i][0])} is duplicate of {same_images[i][1]}"
+                )
+            print("Similar images: ")
+            for i in range(len(similar_images)):
+                print(
+                    f"{os.path.basename(similar_images[i][0])} is similar to {similar_images[i][1]}"
+                )
+        elif result == 0:
+            print("No duplicates found")
 
     def OpenUI(self) -> None:
         self.close()
@@ -28,27 +44,66 @@ class LaunchMode(QDialog):
 
 class UI(QMainWindow):
     def __init__(self) -> None:
-        pass
+        super().__init__()
+        uic.loadUi("./UI.ui", self)
+        self.file_path.clicked.connect(self.FileDir)
+
+    def FileDir(self) -> str:
+        dir = QFileDialog.getExistingDirectory(self, "选择文件夹", "")
+        if dir:
+            self.file_path_label.setText(dir)
+            return dir
+        else:
+            return ""
+
+    def InUI(self) -> None:
+        img_dir = self.FileDir()
+        if img_dir:
+            handler = IdentityComputation(img_dir)
+            result = handler.Duplicates()
+        if type(result) == tuple:
+            same_images, similar_images = result
+            for i in range(len(same_images)):
+                print(
+                    f"{os.path.basename(same_images[i][0])} is duplicate of {same_images[i][1]}"
+                )
 
 
 class IdentityComputation:
     def __init__(self, img_folder) -> None:
-        self.img_folder = img_folder
-        self.duplicates_folder = os.path.join(img_folder, "duplicates")
-        if not os.path.exists(self.duplicates_folder):
-            os.mkdir(self.duplicates_folder)
+        self.img_folder = os.path.abspath(img_folder)
 
-    def Duplicates(self) -> Union[str, Tuple[str, str]]:
+    def Duplicates(self) -> Union[str, (Tuple[Tuple, Tuple]), int]:
         similar_images = []
         same_images = []
         image_files = []
-        unique = True
+        git_folder = ".git"
+        duplicates_folder = "duplicates"
+        if not os.path.exists(duplicates_folder):
+            os.mkdir(duplicates_folder)
         try:
-            for root, dirs, files in os.walk(self.img_folder):
-                if os.path.abspath(root) == self.duplicates_folder:
-                    continue
+            for root, dirs, files in os.walk(self.img_folder, topdown=True):
+                dirs[:] = [d for d in dirs if d not in [duplicates_folder, git_folder]]
+                # if (
+                #     os.path.abspath(root) == self.duplicates_folder
+                #     or os.path.abspath(root) == git_folder
+                # ):
+                #     continue
                 for file in files:
-                    if file.endswith(("exe", "py", "pyc", "pyi", "ui", "json")):
+                    if file.endswith(
+                        (
+                            "exe",
+                            "py",
+                            "pyc",
+                            "pyi",
+                            "ui",
+                            "json",
+                            "txt",
+                            "md",
+                            "gitignore",
+                            "gitattributes",
+                        )
+                    ):
                         continue
                     image_files.append(os.path.join(root, file))
             image_files.sort(reverse=True, key=lambda x: os.path.basename(x))
@@ -83,30 +138,31 @@ class IdentityComputation:
                         same_images.append(
                             (dhash_dict[dhash_keys[i]], dhash_dict[dhash_keys[j]])
                         )
-                        unique = False
                     else:
                         similar_images.append(
                             (dhash_dict[dhash_keys[i]], dhash_dict[dhash_keys[j]])
                         )
-        if unique:
-            print("No duplicates found")
         if same_images:
-            print("Same images: ")
+            # print("Same images: ")
             for i in range(len(same_images)):
-                print(
-                    f"{os.path.basename(same_images[i][0])} is duplicate of {same_images[i][1]}"
-                )
+                # print(
+                #     f"{os.path.basename(same_images[i][0])} is duplicate of {same_images[i][1]}"
+                # )
                 try:
-                    shutil.move(same_images[i][1], self.duplicates_folder)
+                    shutil.move(same_images[i][1], duplicates_folder)
                 except Exception as e:
                     print(e)
-        if similar_images:
-            print("Similar images: ")
-            for i in range(len(similar_images)):
-                print(
-                    f"{os.path.basename(similar_images[i][0])} is similar to {similar_images[i][1]}"
-                )
-        return tuple(similar_images)
+        # if similar_images:
+        #     print("Similar images: ")
+        #     for i in range(len(similar_images)):
+        #         print(
+        #             f"{os.path.basename(similar_images[i][0])} is similar to {similar_images[i][1]}"
+        #         )
+        if same_images or similar_images:
+            return (tuple(same_images), tuple(similar_images))
+        else:
+            # print("No duplicates found")
+            return 0
 
     def MD5Computation(self, file_path) -> str:
         md5 = hashlib.md5()
