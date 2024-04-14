@@ -1,6 +1,6 @@
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QFileDialog, QLabel
-import os, shutil, json
+import os, shutil
 from typing import Union, Tuple
 import hashlib, imagehash
 from PIL import Image
