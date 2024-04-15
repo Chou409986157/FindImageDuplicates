@@ -3,6 +3,7 @@
 
 import subprocess, os
 from tqdm import tqdm
+from multiprocessing import Pool
 
 
 def convert_image(input_path, output_dir):
@@ -43,7 +44,7 @@ if __name__ == "__main__":
     with tqdm(total=file_num, desc="Converting images", unit="file") as pbar:
         for root, _, files in os.walk(input_dir):
             for file in files:
-                if file.endswith((".py", ".exe")):
+                if file.endswith((".py", ".exe")) or file==".converted":
                     continue
                 file_path = os.path.join(root, file)
                 try:
@@ -54,4 +55,4 @@ if __name__ == "__main__":
                 pbar.update(1)
 
     print("All images converted successfully.")
-    input("Press any key to exit.")
+    input("Press enter to exit.")
